@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Parts collection controls
+    match /parts/{partId} {
+      allow read: if true;
+      allow create, update: if isValidId(partId) &&
+        incoming().id == partId &&
+        incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 200 &&
+        incoming().specification is string && incoming().specification.size() <= 200 &&
+        incoming().currentStock is int && incoming().currentStock >= 0 &&
+        incoming().safetyStock is int && incoming().safetyStock >= 0;
+      allow delete: if false;
+    }
+
+    // Workorders collection controls
+    match /workorders/{orderId} {
+      allow read: if true;
+      allow create: if isValidId(orderId) &&
+        incoming().id == orderId &&
+        incoming().machineId is string && incoming().machineId.matches('^MC-[a-zA-Z0-9_\\-]+$') &&
+        incoming().issue is string && incoming().issue.size() > 0 &&
+        incoming().reporter is string && incoming().reporter.size() > 0 &&
+        incoming().priority in ['high', 'medium', 'low'] &&
+        incoming().status == 'pending' &&
+        incoming().createdAt is string;
+      allow update: if isValidId(orderId) &&
+        incoming().id == existing().id &&
+        incoming().machineId == existing().machineId &&
+        incoming().priority == existing().priority &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().status in ['pending', 'in_progress', 'completed'];
+      allow delete: if true;
+    }
+  }
+}

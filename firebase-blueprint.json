@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "SparePart": {
+      "title": "SparePart",
+      "description": "設備維備品項目與庫存水位",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "唯一識別符" },
+        "name": { "type": "string", "description": "備品名稱" },
+        "specification": { "type": "string", "description": "規格型號" },
+        "currentStock": { "type": "integer", "description": "目前在庫庫存" },
+        "safetyStock": { "type": "integer", "description": "安全儲備水位" }
+      },
+      "required": ["id", "name", "specification", "currentStock", "safetyStock"]
+    },
+    "WorkOrder": {
+      "title": "WorkOrder",
+      "description": "機台故障與維護工單派工記錄",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "工單識別編號" },
+        "machineId": { "type": "string", "description": "故障機台編號 (MC-***)" },
+        "issue": { "type": "string", "description": "故障異常現象詳細描述" },
+        "reporter": { "type": "string", "description": "通報檢修工程師/現場人員" },
+        "priority": { "type": "string", "enum": ["high", "medium", "low"], "description": "設備與稼動優先權級" },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "completed"], "description": "工單調度處理狀態" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "工單通報時間" }
+      },
+      "required": ["id", "machineId", "issue", "reporter", "priority", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "parts/{partId}": {
+      "schema": "SparePart",
+      "description": "儲存廠房備品零件之在庫數與安全水位"
+    },
+    "workorders/{orderId}": {
+      "schema": "WorkOrder",
+      "description": "維護工單派遣之詳細記錄日誌"
+    }
+  }
+}
